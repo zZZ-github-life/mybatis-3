@@ -85,7 +85,10 @@ public class CachingExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler)
       throws SQLException {
+    //获取sql相关信息，包含：sql语句本身（包含占位符的），参数的封装，其他
     BoundSql boundSql = ms.getBoundSql(parameterObject);
+    //下面为了做缓存。这里的缓存就是所谓的一级缓存就是PerpetualCache对象，内部是一个hashmap
+    //创建缓存的key，这个key是通过以下四个参数，通过计算得出，方便下次查询计算出来的key和当前相同，那么就可以直接用这个key缓存的vluel
     CacheKey key = createCacheKey(ms, parameterObject, rowBounds, boundSql);
     return query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
   }
@@ -93,8 +96,10 @@ public class CachingExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler,
       CacheKey key, BoundSql boundSql) throws SQLException {
+
+    //mybatis的二级缓存，如果要开启，则要在对应的mapper.xml文件中指定开启
     Cache cache = ms.getCache();
-    if (cache != null) {
+    if (cache != null) { //如果开启了，则尝试在二级缓存中查找
       flushCacheIfRequired(ms);
       if (ms.isUseCache() && resultHandler == null) {
         ensureNoOutParams(ms, boundSql);
@@ -107,6 +112,7 @@ public class CachingExecutor implements Executor {
         return list;
       }
     }
+    //没有缓存，直接查库
     return delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
   }
 

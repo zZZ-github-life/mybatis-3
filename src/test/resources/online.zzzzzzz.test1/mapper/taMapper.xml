@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 命名空间的作用是对SQL进行分类管理，起到隔离SQL的作用，如果使用mapper代理，namespace有特殊重要作用 -->
+<!--
+<mapper namespace="online.zzzzzzz.test1.TaMapper">
+-->
+<mapper namespace="TaMapper">
+
+    <cache/>
+
+    <!-- 通过select元素配置查询语句，id属性值，可以理解为标识映射文件中的SQL，因为最终将SQL语句封装到mappedStatement对象中去，
+    所以id为statement的id ，在此SQL中，使用#{}表示占位符，花括号中的值为userId表示要接收的参数，参数的名称为userId，
+    如果输入的参数是基本数据类型，#{}中的参数可以为任意名称，但是一般都遵循开发规范写形参名，
+    parameterType是SQL要接收的参数的数据类型，而resultType是select进行查询后，返回的数据类型，
+    因为是单条查询，所以映射为一个Java Bean对象-->
+    <select id="getUserById" parameterType="String" resultType="online.zzzzzzz.test1.Ta">
+        select * from ta where id=#{id}
+    </select>
+    <select id="getUserById1" parameterType="String" resultType="online.zzzzzzz.test1.Ta">
+        select * from ta where id=${id}
+    </select>
+    <select id="getUserByNum" parameterType="String" resultType="online.zzzzzzz.test1.Ta">
+        select * from ta where num=${num1}
+    </select>
+
+    <select id="getUserByNn" parameterType="String" resultType="online.zzzzzzz.test1.Ta">
+        select * from ta where nn=${nn}
+    </select>
+
+    <update id="update" parameterType="map" >
+        update ta set  num=#{num1} where id=#{id}
+    </update>
+
+</mapper>

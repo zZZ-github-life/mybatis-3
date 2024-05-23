@@ -183,6 +183,10 @@ public class Configuration {
     this.environment = environment;
   }
 
+  /*
+  * mybatis的默认别名
+  *
+  * */
   public Configuration() {
     typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
     typeAliasRegistry.registerAlias("MANAGED", ManagedTransactionFactory.class);
@@ -713,13 +717,17 @@ public class Configuration {
       Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
     StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject,
         rowBounds, resultHandler, boundSql);
-    return (StatementHandler) interceptorChain.pluginAll(statementHandler);
+    return (StatementHandler) interceptorChain.pluginAll(statementHandler);  //mybatis的插件功能，可对StatementHandler做增强
   }
 
   public Executor newExecutor(Transaction transaction) {
     return newExecutor(transaction, defaultExecutorType);
   }
 
+  /*
+  * 创建一个执行器用来执行sql，执行器对象包含了本地缓存，配置对象，事务对象
+  *
+  * */
   public Executor newExecutor(Transaction transaction, ExecutorType executorType) {
     executorType = executorType == null ? defaultExecutorType : executorType;
     Executor executor;
@@ -872,7 +880,7 @@ public class Configuration {
     if (validateIncompleteStatements) {
       buildAllStatements();
     }
-    return mappedStatements.get(id);
+    return mappedStatements.get(id);//concurrentHashMap的实现，存放所有的sql标签的id和xml的映射语句
   }
 
   public Map<String, XNode> getSqlFragments() {

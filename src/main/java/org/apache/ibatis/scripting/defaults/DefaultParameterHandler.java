@@ -86,7 +86,8 @@ public class DefaultParameterHandler implements ParameterHandler {
           if (value == null && jdbcType == null) {
             jdbcType = configuration.getJdbcTypeForNull();
           }
-          try {
+          try {//这里就是处理 将参数放入sql中
+            //像防止sql注入的参数，实际上mybatis并没有自己处理，而是调用jdbc的预处理方式
             typeHandler.setParameter(ps, i + 1, value, jdbcType);
           } catch (TypeException | SQLException e) {
             throw new TypeException("Could not set parameters for mapping: " + parameterMapping + ". Cause: " + e, e);

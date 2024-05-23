@@ -29,6 +29,12 @@ import org.apache.ibatis.session.defaults.DefaultSqlSessionFactory;
  * Builds {@link SqlSession} instances.
  *
  * @author Clinton Begin
+ *
+ * 这个类的主要目的就是通过io流或者开发者手动构建的Configuration来创建一个SqlSessionFactory
+ *
+ * io流：读取到的xml
+ *
+ * SqlSessionFactory：用来生成SqlSession
  */
 public class SqlSessionFactoryBuilder {
 
@@ -76,7 +82,12 @@ public class SqlSessionFactoryBuilder {
 
   public SqlSessionFactory build(InputStream inputStream, String environment, Properties properties) {
     try {
+      //根据io的输入流，环境，配置，构建xml解析器，目的是为了解析mybatis的核心配置文件
+      //这里创建了一个Configuration
       XMLConfigBuilder parser = new XMLConfigBuilder(inputStream, environment, properties);
+      //首先，解析配置文件，并将这些配置封装到上面的XMLConfigBuilder的Configuration中
+      //像平时在configuration标签下配置的settings标签，mappers标签，environments标签
+      //再者，创建一个默认的SqlSessionFactory对象，并将解析好的Configuration放到SqlSessionFactory内部
       return build(parser.parse());
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error building SqlSession.", e);
@@ -92,6 +103,10 @@ public class SqlSessionFactoryBuilder {
     }
   }
 
+  /*
+  * 创建默认的sqlSession工厂
+  *
+  * */
   public SqlSessionFactory build(Configuration config) {
     return new DefaultSqlSessionFactory(config);
   }

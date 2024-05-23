@@ -61,9 +61,9 @@ public class PreparedStatementHandler extends BaseStatementHandler {
 
   @Override
   public <E> List<E> query(Statement statement, ResultHandler resultHandler) throws SQLException {
-    PreparedStatement ps = (PreparedStatement) statement;
-    ps.execute();
-    return resultSetHandler.handleResultSets(ps);
+    PreparedStatement ps = (PreparedStatement) statement; //实现父类抽象方法，强转预处理sql
+    ps.execute();//执行sql
+    return resultSetHandler.handleResultSets(ps);  //封装结果集
   }
 
   @Override
@@ -85,7 +85,8 @@ public class PreparedStatementHandler extends BaseStatementHandler {
       }
     }
     if (mappedStatement.getResultSetType() == ResultSetType.DEFAULT) {
-      return connection.prepareStatement(sql);
+      //实际调用了：com.mysql.cj.jdbc.ConnectionImpl.prepareStatement(java.lang.String)
+      return connection.prepareStatement(sql); //这里connection动态代理了jdbc的conn，设置预处理参数
     } else {
       return connection.prepareStatement(sql, mappedStatement.getResultSetType().getValue(),
           ResultSet.CONCUR_READ_ONLY);

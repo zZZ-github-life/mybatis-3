@@ -20,10 +20,10 @@ package org.apache.ibatis.mapping;
  */
 public enum StatementType {
 
-  STATEMENT,
+  STATEMENT, //普通sql
 
-  PREPARED,
+  PREPARED, //预编译的sql
 
-  CALLABLE
+  CALLABLE //表示存储过程
 
 }

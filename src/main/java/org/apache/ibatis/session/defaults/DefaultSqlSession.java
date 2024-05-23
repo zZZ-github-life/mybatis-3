@@ -50,6 +50,9 @@ public class DefaultSqlSession implements SqlSession {
   private final Executor executor;
 
   private final boolean autoCommit;
+  //表示mybatis的这个sqlSession是否发生了修改，发生了为true
+  //标志的使用主要涉及到 MyBatis 的缓存机制。当 dirty 为 true 时，MyBatis 会清空一级缓存，以确保获取到的数据是最新的。
+  // 因为在修改操作之后，数据库中的数据可能已经发生了变化，为了保证数据的一致性，MyBatis 会主动清空缓存
   private boolean dirty;
   private List<Cursor<?>> cursorList;
 
@@ -149,8 +152,12 @@ public class DefaultSqlSession implements SqlSession {
 
   private <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds, ResultHandler handler) {
     try {
+      //获取mapper.xml中的sql语句（也就是配置mybatis的mapper.xml文件中的单个<select>标签），并且封装成MappedStatement
       MappedStatement ms = configuration.getMappedStatement(statement);
       dirty |= ms.isDirtySelect();
+      //执行查询，
+      //在执行查询前，需要先包装查询参数
+      // 这里默认会是一个缓存执行器，执行查询
       return executor.query(ms, wrapCollection(parameter), rowBounds, handler);
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);

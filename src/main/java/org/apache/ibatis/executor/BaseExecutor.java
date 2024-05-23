@@ -133,7 +133,7 @@ public abstract class BaseExecutor implements Executor {
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler)
       throws SQLException {
     BoundSql boundSql = ms.getBoundSql(parameter);
-    CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql);
+    CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql);//创建key，通过这个可以检查是否命中缓存，或者放入缓存
     return query(ms, parameter, rowBounds, resultHandler, key, boundSql);
   }
 
@@ -151,10 +151,10 @@ public abstract class BaseExecutor implements Executor {
     List<E> list;
     try {
       queryStack++;
-      list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
-      if (list != null) {
+      list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;//从一级缓存中查找是否已经存在了这条sql
+      if (list != null) {//如果命中缓存，则直接返回缓存数据，检查是不是存储过程，是的话需要处理输出参数。
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
-      } else {
+      } else {//没有命中直接查数据库
         list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
       }
     } finally {
@@ -310,6 +310,7 @@ public abstract class BaseExecutor implements Executor {
     StatementUtil.applyTransactionTimeout(statement, statement.getQueryTimeout(), transaction.getTimeout());
   }
 
+  //处理存储过程的输出参数
   private void handleLocallyCachedOutputParameters(MappedStatement ms, CacheKey key, Object parameter,
       BoundSql boundSql) {
     if (ms.getStatementType() == StatementType.CALLABLE) {
@@ -331,20 +332,27 @@ public abstract class BaseExecutor implements Executor {
   private <E> List<E> queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds,
       ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     List<E> list;
-    localCache.putObject(key, EXECUTION_PLACEHOLDER);
+    localCache.putObject(key, EXECUTION_PLACEHOLDER); //准备执行sql了，先把这个sql放入缓存，用个占位符代替，执行完之后再放入正在的结果
     try {
+      //这里才是真正执行查询的方法
       list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);
     } finally {
-      localCache.removeObject(key);
+      localCache.removeObject(key); //移除占位缓存
     }
-    localCache.putObject(key, list);
-    if (ms.getStatementType() == StatementType.CALLABLE) {
+    localCache.putObject(key, list); //将正真结果放入缓存
+    if (ms.getStatementType() == StatementType.CALLABLE) { //如果是存储过程的
       localOutputParameterCache.putObject(key, parameter);
     }
     return list;
   }
 
   protected Connection getConnection(Log statementLog) throws SQLException {
+    //这里会获取链接，设置事务的隔离级别，这是是否自动提交
+    //mybatis提供了两种事务管理器：
+    // JdbcTransaction：接使用了 JDBC 的提交和回滚功能
+    // ManagedTransaction：它从不提交或回滚一个连接，而是让容器来管理事务的整个生命周期
+
+    //如果使用 Spring + MyBatis，则没有必要配置事务管理器，因为 Spring 模块会使用自带的管理器来覆盖前面的配置。
     Connection connection = transaction.getConnection();
     if (statementLog.isDebugEnabled()) {
       return ConnectionLogger.newInstance(connection, statementLog, queryStack);

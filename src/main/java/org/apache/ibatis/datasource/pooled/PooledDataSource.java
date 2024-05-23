@@ -432,6 +432,14 @@ public class PooledDataSource implements DataSource {
     }
   }
 
+  /*
+  * 通过连接池获取链接
+  *   1，如果有空闲的链接，直接拿头部的空闲链接
+  *   2，如果有没有空闲链接，且此时还没达到最大链接池的上限，则开启新链接
+  *   3，如果没有空闲线程，且连接池达到上限，那么检查最早进来的链接是否过来最大等待时间，如果过了，那么回滚事务，中断链接，重新开启一个新链接
+  *                                   如果没有超过最大等待时间，那么这个链接只能等待了
+  *
+  * */
   private PooledConnection popConnection(String username, String password) throws SQLException {
     boolean countedWait = false;
     PooledConnection conn = null;

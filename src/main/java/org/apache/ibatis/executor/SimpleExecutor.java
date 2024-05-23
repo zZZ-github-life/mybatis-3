@@ -59,10 +59,13 @@ public class SimpleExecutor extends BaseExecutor {
     Statement stmt = null;
     try {
       Configuration configuration = ms.getConfiguration();
+      //这里会得到一个sql语句处理器
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler,
           boundSql);
-      stmt = prepareStatement(handler, ms.getStatementLog());
-      return handler.query(stmt, resultHandler);
+      //获取jdbc规范中的statement
+      // 这里会获取一个数据库连接，通过数据库连接构造一个stmt，并且在这里绑定参数
+      stmt = prepareStatement(handler, ms.getStatementLog()); //准备statement，返回一个准备好的statement
+      return handler.query(stmt, resultHandler); //获取查询结果
     } finally {
       closeStatement(stmt);
     }
@@ -86,9 +89,15 @@ public class SimpleExecutor extends BaseExecutor {
 
   private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
     Statement stmt;
-    Connection connection = getConnection(statementLog);
-    stmt = handler.prepare(connection, transaction.getTimeout());
-    handler.parameterize(stmt);
+    /*
+    * 获取连接：
+    *   这里实际是调用‘事务对象’获取连接，事务对象中持有dataSource的引用
+    *   mybatis自带了不同的dataSource的实现，常用的有池和非池
+    *
+    * */
+    Connection connection = getConnection(statementLog); //获取连接
+    stmt = handler.prepare(connection, transaction.getTimeout()); //正常的jdbc操作，获取Statement
+    handler.parameterize(stmt); //这里完成了sql和参数的绑定，即得到了完整的sql
     return stmt;
   }
 

@@ -87,9 +87,10 @@ public abstract class BaseStatementHandler implements StatementHandler {
     ErrorContext.instance().sql(boundSql.getSql());
     Statement statement = null;
     try {
+      //创建一个statement
       statement = instantiateStatement(connection);
-      setStatementTimeout(statement, transactionTimeout);
-      setFetchSize(statement);
+      setStatementTimeout(statement, transactionTimeout); //设置一个超时时间
+      setFetchSize(statement); //设置一次获取的行数，防止内存溢出
       return statement;
     } catch (SQLException e) {
       closeStatement(statement);
@@ -114,7 +115,8 @@ public abstract class BaseStatementHandler implements StatementHandler {
     }
     StatementUtil.applyTransactionTimeout(stmt, queryTimeout, transactionTimeout);
   }
-
+  //在 JDBC 中，当执行查询语句并获取结果集时，通常是一次性将整个结果集加载到内存中。
+  // 如果结果集非常大，这可能导致内存消耗过大。为了解决这个问题，可以使用 setFetchSize 方法来设置每次从数据库获取的行数
   protected void setFetchSize(Statement stmt) throws SQLException {
     Integer fetchSize = mappedStatement.getFetchSize();
     if (fetchSize != null) {

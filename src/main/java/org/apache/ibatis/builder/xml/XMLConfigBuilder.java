@@ -111,6 +111,10 @@ public class XMLConfigBuilder extends BaseBuilder {
     return configuration;
   }
 
+  /*
+  * 解析mybatis的核心配置文件，将各个标签的内容封装到configuration
+  *
+  * */
   private void parseConfiguration(XNode root) {
     try {
       // issue #117 read properties first

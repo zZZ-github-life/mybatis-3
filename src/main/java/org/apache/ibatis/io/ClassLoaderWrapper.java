@@ -85,6 +85,12 @@ public class ClassLoaderWrapper {
    * @return the stream or null
    */
   public InputStream getResourceAsStream(String resource, ClassLoader classLoader) {
+    /*
+    * 从五个类路径下查找指定资源，找到就返回
+    * 顺序如下：首先找指定的类加载器，默认的类加载器，当前线程的类加载器，当前类的类路径，最后是应用类的类路径
+    *
+    * 就是把能找的地方都找个遍，找到就返回，找不到就算了
+    * */
     return getResourceAsStream(resource, getClassLoaders(classLoader));
   }
 
@@ -122,6 +128,8 @@ public class ClassLoaderWrapper {
 
   /**
    * Try to get a resource from a group of classloaders
+   *
+   * 这里会从指定的目录中查找指定的资源，从指定的几个类路径下查找
    *
    * @param resource
    *          - the resource to get
